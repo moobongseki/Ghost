@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>幽灵小屋探险</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #0d1b2a;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #app {
+            width: 100vw;
+            height: 100dvh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ========== 开场屏 ========== */
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a0b2e, #0d1b2a);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.8s ease;
+        }
+
+        #startScreen h1 {
+            font-size: 42px;
+            color: #ff7b25;
+            text-shadow: 0 0 20px rgba(255, 123, 37, 0.6);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        #startScreen .subtitle {
+            font-size: 18px;
+            color: #9b5de5;
+            margin-bottom: 60px;
+            text-align: center;
+        }
+
+        #startBtn {
+            font-size: 60px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            animation: bounce 1.5s ease-in-out infinite;
+            transition: transform 0.2s;
+        }
+
+        #startBtn:active {
+            transform: scale(0.9);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* ========== 主场景 ========== */
+        #gameScene {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 900px;
+            height: 100%;
+            background: linear-gradient(180deg, #1a0b2e 0%, #2d1b4e 60%, #1a0b2e 100%);
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            overflow: hidden;
+        }
+
+        /* 房间背景装饰 */
+        #roomBg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 月亮 */
+        .moon {
+            position: absolute;
+            top: 8%;
+            right: 10%;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 35% 35%, #fff9e6, #f0e68c);
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(255, 249, 230, 0.4);
+        }
+
+        /* 云 */
+        .cloud {
+            position: absolute;
+            background: rgba(155, 93, 229, 0.15);
+            border-radius: 50px;
+            animation: float 20s linear infinite;
+        }
+
+        .cloud1 {
+            top: 15%;
+            left: -100px;
+            width: 120px;
+            height: 30px;
+        }
+
+        .cloud2 {
+            top: 25%;
+            left: -150px;
+            width: 180px;
+            height: 40px;
+            animation-delay: -10s;
+            animation-duration: 25s;
+        }
+
+        @keyframes float {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(100vw + 200px)); }
+        }
+
+        /* 蝙蝠 */
+        .bat {
+            position: absolute;
+            font-size: 24px;
+            animation: batFly 15s linear infinite;
+            opacity: 0.6;
+        }
+
+        .bat1 {
+            top: 12%;
+            left: -50px;
+        }
+
+        .bat2 {
+            top: 20%;
+            left: -50px;
+            animation-delay: -5s;
+            animation-duration: 12s;
+        }
+
+        @keyframes batFly {
+            0% { transform: translateX(0) translateY(0); }
+            25% { transform: translateX(25vw) translateY(-20px); }
+            50% { transform: translateX(50vw) translateY(10px); }
+            75% { transform: translateX(75vw) translateY(-15px); }
+            100% { transform: translateX(calc(100vw + 100px)) translateY(0); }
+        }
+
+        /* 地板 */
+        .floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 25%;
+            background: linear-gradient(180deg, #3d2b1f, #2a1f14);
+        }
+
+        /* 蜘蛛网装饰 */
+        .web-deco {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 60px;
+            opacity: 0.2;
+        }
+
+        /* 雾效 */
+        .fog {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 40%;
+            background: radial-gradient(ellipse at center, rgba(155, 93, 229, 0.1), transparent 70%);
+            animation: fogMove 10s ease-in-out infinite alternate;
+        }
+
+        @keyframes fogMove {
+            0% { transform: translateX(0); opacity: 0.5; }
+            100% { transform: translateX(-20%); opacity: 0.8; }
+        }
+
+        /* ========== 小幽灵 ========== */
+        #playerGhost {
+            position: absolute;
+            width: 60px;
+            height: 70px;
+            left: 10%;
+            bottom: 20%;
+            z-index: 10;
+            transition: left 0.6s ease, bottom 0.6s ease;
+            cursor: pointer;
+        }
+
+        .ghost-body {
+            width: 100%;
+            height: 100%;
+            background: #f0f0f0;
+            border-radius: 50% 50% 10px 10px;
+            position: relative;
+            animation: ghostFloat 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+        }
+
+        .ghost-body::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 15px;
+            background: 
+                radial-gradient(circle at 15% 100%, #f0f0f0 60%, transparent 60%),
+                radial-gradient(circle at 50% 100%, #f0f0f0 60%, transparent 60%),
+                radial-gradient(circle at 85% 100%, #f0f0f0 60%, transparent 60%);
+        }
+
+        .ghost-eye {
+            position: absolute;
+            top: 25%;
+            width: 10px;
+            height: 14px;
+            background: #1a0b2e;
+            border-radius: 50%;
+        }
+
+        .ghost-eye.left {
+            left: 25%;
+        }
+
+        .ghost-eye.right {
+            right: 25%;
+        }
+
+        .ghost-cheek {
+            position: absolute;
+            top: 45%;
+            width: 8px;
+            height: 5px;
+            background: rgba(255, 93, 143, 0.4);
+            border-radius: 50%;
+        }
+
+        .ghost-cheek.left {
+            left: 15%;
+        }
+
+        .ghost-cheek.right {
+            right: 15%;
+        }
+
+        @keyframes ghostFloat {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        /* ========== 可收集物件 ========== */
+        .item {
+            position: absolute;
+            font-size: 48px;
+            cursor: pointer;
+            z-index: 5;
+            transition: transform 0.3s ease, opacity 0.5s ease;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .item:hover, .item:active {
+            transform: scale(1.2);
+        }
+
+        .item.collected {
+            opacity: 0;
+            transform: scale(0);
+            pointer-events: none;
+        }
+
+        .item.collecting {
+            animation: collectAnim 0.8s ease forwards;
+        }
+
+        @keyframes collectAnim {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        /* 物件位置 */
+        .item-candle {
+            top: 25%;
+            left: 15%;
+        }
+
+        .item-web {
+            top: 15%;
+            right: 15%;
+            font-size: 40px;
+        }
+
+        .item-tomb {
+            bottom: 28%;
+            left: 10%;
+        }
+
+        .item-candyJar {
+            top: 35%;
+            right: 12%;
+        }
+
+        .item-pumpkin {
+            bottom: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .item-pumpkin:hover {
+            transform: translateX(-50%) scale(1.2);
+        }
+
+        /* ========== 最终门 ========== */
+        #finalDoor {
+            position: absolute;
+            bottom: 25%;
+            right: 20%;
+            width: 70px;
+            height: 120px;
+            background: linear-gradient(180deg, #4a3728, #2d1f14);
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            z-index: 6;
+            transition: all 0.5s ease;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #finalDoor::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        }
+
+        #finalDoor.locked {
+            filter: brightness(0.6);
+        }
+
+        #finalDoor.unlocked {
+            animation: doorShake 0.5s ease infinite;
+        }
+
+        #finalDoor.unlocked::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent 45%, rgba(255, 200, 100, 0.6) 50%, transparent 55%);
+            animation: doorGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes doorShake {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(2px); }
+        }
+
+        @keyframes doorGlow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        /* ========== HUD ========== */
+        #progressBar {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #progressText {
+            color: #fff;
+            font-size: 14px;
+            white-space: nowrap;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .progress-track {
+            flex: 1;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff7b25, #ff5d8f);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        #hintText {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 14px;
+            text-align: center;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 20px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        /* 静音按钮 */
+        #muteBtn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.3);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        /* ========== 情话弹窗 ========== */
+        #dialogModal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        #dialogModal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .dialog-card {
+            background: linear-gradient(135deg, #fff9e6, #f5e6d3);
+            border-radius: 16px;
+            padding: 30px 25px;
+            max-width: 320px;
+            width: 85%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transform: scale(0.8);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #dialogModal.show .dialog-card {
+            transform: scale(1);
+        }
+
+        .dialog-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .dialog-text {
+            font-size: 18px;
+            color: #4a3728;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            min-height: 80px;
+        }
+
+        .dialog-note {
+            font-size: 12px;
+            color: #9b5de5;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        #closeDialogBtn {
+            background: linear-gradient(135deg, #ff7b25, #ff5d8f);
+            color: white;
+            border: none;
+            padding: 12px 36px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 123, 37, 0.4);
+            transition: transform 0.2s;
+        }
+
+        #closeDialogBtn:active {
+            transform: scale(0.95);
+        }
+
+        /* ========== 结局层 ========== */
+        #endingScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2d1b4e, #4a1942);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+
+        #endingScreen.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .ending-photo {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 8px solid #fff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+            object-fit: cover;
+            transform: rotate(-5deg);
+            background: #9b5de5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            opacity: 0;
+            transition: opacity 0.8s ease 0.3s;
+        }
+
+        #endingScreen.show .ending-photo {
+            opacity: 1;
+        }
+
+        .ending-text {
+            font-size: 24px;
+            color: #fff;
+            text-align: center;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            min-height: 60px;
+            max-width: 300px;
+        }
+
+        #replayBtn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.5s ease 2s;
+        }
+
+        #endingScreen.show #replayBtn {
+            opacity: 1;
+        }
+
+        /* ========== 糖果雨画布 ========== */
+        #candyCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* 手机竖屏适配 */
+        @media (max-width: 480px) {
+            #startScreen h1 {
+                font-size: 32px;
+            }
+
+            .item {
+                font-size: 40px;
+            }
+
+            .item-web {
+                font-size: 32px;
+            }
+
+            #finalDoor {
+                width: 60px;
+                height: 100px;
+                right: 15%;
+            }
+
+            .ending-text {
+                font-size: 20px;
+            }
+        }
+
+        /* 减少动画偏好 */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 开场遮罩 -->
+        <div id="startScreen">
+            <h1>🎃 幽灵小屋探险 👻</h1>
+            <p class="subtitle">点我开始，胆小的别来哦～</p>
+            <button id="startBtn">🎃</button>
+        </div>
+
+        <!-- 主场景 -->
+        <div id="gameScene">
+            <div id="roomBg">
+                <div class="moon"></div>
+                <div class="cloud cloud1"></div>
+                <div class="cloud cloud2"></div>
+                <div class="bat bat1">🦇</div>
+                <div class="bat bat2">🦇</div>
+                <div class="floor"></div>
+                <div class="web-deco">🕸️</div>
+                <div class="fog"></div>
+            </div>
+
+            <!-- 小幽灵 -->
+            <div id="playerGhost">
+                <div class="ghost-body">
+                    <div class="ghost-eye left"></div>
+                    <div class="ghost-eye right"></div>
+                    <div class="ghost-cheek left"></div>
+                    <div class="ghost-cheek right"></div>
+                </div>
+            </div>
+
+            <!-- 可收集物件 -->
+            <div class="item item-candle" data-id="candle">🕯️</div>
+            <div class="item item-web" data-id="web">🕸️</div>
+            <div class="item item-tomb" data-id="tomb">🪦</div>
+            <div class="item item-candyJar" data-id="candyJar">🍬</div>
+            <div class="item item-pumpkin" data-id="pumpkin">🎃</div>
+
+            <!-- 最终门 -->
+            <div id="finalDoor" class="locked"></div>
+        </div>
+
+        <!-- HUD -->
+        <div id="progressBar">
+            <span id="progressText">已收集 0 / 5</span>
+            <div class="progress-track">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div id="hintText">点点看，屋里藏着 5 件东西……</div>
+        <button id="muteBtn">🔊</button>
+
+        <!-- 情话弹窗 -->
+        <div id="dialogModal">
+            <div class="dialog-card">
+                <div class="dialog-icon" id="dialogIcon">🕯️</div>
+                <div class="dialog-text" id="dialogText"></div>
+                <div class="dialog-note">——来自某个想你的鬼</div>
+                <button id="closeDialogBtn">收下 💝</button>
+            </div>
+        </div>
+
+        <!-- 结局层 -->
+        <div id="endingScreen">
+            <!-- 【替换照片位置】把下面的 photos/our-photo.jpg 改成你们合照的路径 -->
+            <div class="ending-photo">
+                <img src="photos/our-photo.jpg" alt="合照" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            </div>
+            <div class="ending-text" id="endingText"></div>
+            <button id="replayBtn">再玩一次 🔄</button>
+        </div>
+
+        <!-- 糖果雨画布 -->
+        <canvas id="candyCanvas"></canvas>
+    </div>
+
+    <script>
+        // ==================== 配置区（可修改） ====================
+        const CONFIG = {
+            // 【替换情话位置】修改下面五句情话即可
+            loveLines: {
+                candle: "这盏蜡烛烧了多久，我就想了你多久。",
+                web: "这张网再密，也网不住我想你的心。",
+                tomb: "这里埋着我单身的日子，遇见你那天它就死了。",
+                candyJar: "不给糖就捣蛋？那我给你一辈子的甜。",
+                pumpkin: "你一笑，比南瓜灯还亮。"
+            },
+            // 【替换结语位置】结局显示的文字
+            endingText: "Trick or Treat? 我要的不是糖，是你。",
+            // 【替换照片位置】合照路径
+            photoSrc: "photos/our-photo.jpg",
+            // 【替换音频位置】背景音乐和音效路径
+            audio: {
+                bgm: "audio/bgm.ogg",
+                click: "audio/click.mp3",
+                door: "audio/door.mp3",
+                win: "audio/win.mp3"
+            }
+        };
+
+        // ==================== 状态变量 ====================
+        let collectedCount = 0;
+        const totalItems = 5;
+        let isDialogOpen = false;
+        let gameStarted = false;
+        let isMuted = false;
+        let audioCtx = null;
+        let bgmAudio = null;
+
+        // 物件emoji映射
+        const itemIcons = {
+            candle: "🕯️",
+            web: "🕸️",
+            tomb: "🪦",
+            candyJar: "🍬",
+            pumpkin: "🎃"
+        };
+
+        // ==================== DOM 元素 ====================
+        const startScreen = document.getElementById('startScreen');
+        const startBtn = document.getElementById('startBtn');
+        const gameScene = document.getElementById('gameScene');
+        const playerGhost = document.getElementById('playerGhost');
+        const finalDoor = document.getElementById('finalDoor');
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.querySelector('.progress-fill');
+        const hintText = document.getElementById('hintText');
+        const dialogModal = document.getElementById('dialogModal');
+        const dialogIcon = document.getElementById('dialogIcon');
+        const dialogText = document.getElementById('dialogText');
+        const closeDialogBtn = document.getElementById('closeDialogBtn');
+        const endingScreen = document.getElementById('endingScreen');
+        const endingText = document.getElementById('endingText');
+        const replayBtn = document.getElementById('replayBtn');
+        const muteBtn = document.getElementById('muteBtn');
+        const candyCanvas = document.getElementById('candyCanvas');
+        const ctx = candyCanvas.getContext('2d');
+
+        // ==================== 初始化 ====================
+        function init() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            bindEvents();
+        }
+
+        function resizeCanvas() {
+            candyCanvas.width = window.innerWidth * (window.devicePixelRatio || 1);
+            candyCanvas.height = window.innerHeight * (window.devicePixelRatio || 1);
+            candyCanvas.style.width = window.innerWidth + 'px';
+            candyCanvas.style.height = window.innerHeight + 'px';
+            ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+        }
+
+        function bindEvents() {
+            // 开始按钮
+            startBtn.addEventListener('click', startGame);
+
+            // 物件点击（事件委托）
+            document.querySelectorAll('.item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    collectItem(item);
+                });
+            });
+
+            // 点击地面移动幽灵
+            gameScene.addEventListener('click', (e) => {
+                if (!gameStarted || isDialogOpen) return;
+                moveGhostTo(e.clientX, e.clientY);
+            });
+
+            // 关闭弹窗
+            closeDialogBtn.addEventListener('click', closeDialog);
+            dialogModal.addEventListener('click', (e) => {
+                if (e.target === dialogModal) closeDialog();
+            });
+
+            // 最终门
+            finalDoor.addEventListener('click', onDoorClick);
+
+            // 重玩
+            replayBtn.addEventListener('click', resetGame);
+
+            // 静音按钮
+            muteBtn.addEventListener('click', toggleMute);
+        }
+
+        // ==================== 游戏开始 ====================
+        function startGame() {
+            gameStarted = true;
+            startScreen.style.opacity = '0';
+            setTimeout(() => {
+                startScreen.style.display = 'none';
+            }, 800);
+
+            gameScene.style.opacity = '1';
+            document.getElementById('progressBar').style.opacity = '1';
+            document.getElementById('hintText').style.opacity = '1';
+            muteBtn.style.opacity = '1';
+
+            // 播放背景音乐
+            playBGM();
+
+            // 幽灵飘入动画
+            playerGhost.style.left = '10%';
+        }
+
+        // ==================== 幽灵移动 ====================
+        function moveGhostTo(x, y) {
+            const sceneRect = gameScene.getBoundingClientRect();
+            const relX = x - sceneRect.left;
+            const relY = y - sceneRect.top;
+
+            // 限制在场景内
+            const maxX = sceneRect.width - 60;
+            const maxY = sceneRect.height - 100;
+            const newX = Math.max(0, Math.min(relX, maxX));
+            const newY = Math.max(0, Math.min(relY, maxY));
+
+            playerGhost.style.left = newX + 'px';
+            playerGhost.style.bottom = (sceneRect.height - newY - 70) + 'px';
+        }
+
+        // ==================== 收集物件 ====================
+        function collectItem(itemEl) {
+            if (itemEl.classList.contains('collected') || isDialogOpen || !gameStarted) return;
+
+            const itemId = itemEl.dataset.id;
+            itemEl.classList.add('collecting');
+
+            playSound('click');
+
+            setTimeout(() => {
+                itemEl.classList.add('collected');
+                showDialog(itemId);
+            }, 600);
+        }
+
+        // ==================== 情话弹窗 ====================
+        function showDialog(itemId) {
+            isDialogOpen = true;
+            dialogIcon.textContent = itemIcons[itemId];
+            dialogText.textContent = '';
+            dialogModal.classList.add('show');
+
+            // 打字机效果
+            const text = CONFIG.loveLines[itemId];
+            let i = 0;
+            const typeInterval = setInterval(() => {
+                if (i < text.length) {
+                    dialogText.textContent += text[i];
+                    i++;
+                } else {
+                    clearInterval(typeInterval);
+                }
+            }, 80);
+
+            // 点击卡片跳过打字
+            dialogModal.querySelector('.dialog-card').addEventListener('click', () => {
+                dialogText.textContent = text;
+                clearInterval(typeInterval);
+            }, { once: true });
+        }
+
+        function closeDialog() {
+            dialogModal.classList.remove('show');
+            isDialogOpen = false;
+
+            // 更新进度
+            collectedCount++;
+            updateProgress();
+
+            // 更新提示
+            if (collectedCount < totalItems) {
+                hintText.textContent = `再找找看，还差 ${totalItems - collectedCount} 件东西……`;
+            } else {
+                hintText.textContent = '门开了，进去吧！✨';
+                unlockDoor();
+            }
+        }
+
+        function updateProgress() {
+            progressText.textContent = `已收集 ${collectedCount} / ${totalItems}`;
+            progressFill.style.width = (collectedCount / totalItems * 100) + '%';
+        }
+
+        // ==================== 最终门 ====================
+        function unlockDoor() {
+            finalDoor.classList.remove('locked');
+            finalDoor.classList.add('unlocked');
+            playSound('door');
+        }
+
+        function onDoorClick() {
+            if (!gameStarted || isDialogOpen) return;
+
+            if (collectedCount < totalItems) {
+                hintText.textContent = `还差 ${totalItems - collectedCount} 件东西才能开门哦～`;
+                setTimeout(() => {
+                    hintText.textContent = collectedCount === 0 ? '点点看，屋里藏着 5 件东西……' : `再找找看，还差 ${totalItems - collectedCount} 件东西……`;
+                }, 2000);
+                return;
+            }
+
+            // 进入结局
+            showEnding();
+        }
+
+        // ==================== 结局 ====================
+        function showEnding() {
+            endingScreen.classList.add('show');
+
+            // 打字机效果显示结语
+            const text = CONFIG.endingText;
+            let i = 0;
+            const typeInterval = setInterval(() => {
+                if (i < text.length) {
+                    endingText.textContent += text[i];
+                    i++;
+                } else {
+                    clearInterval(typeInterval);
+                }
+            }, 100);
+
+            // 1秒后触发糖果雨
+            setTimeout(() => {
+                startCandyRain();
+                playSound('win');
+            }, 1000);
+        }
+
+        // ==================== 糖果雨 ====================
+        let candies = [];
+        let candyAnimationId = null;
+        let stopGenerating = false;
+        let generateTime = 0;
+
+        const candyTypes = ['🍬', '🍭', '🎃', '❤️', '👻', '🧡', '💜'];
+
+        function startCandyRain() {
+            candies = [];
+            stopGenerating = false;
+            generateTime = Date.now();
+
+            function createCandy() {
+                if (stopGenerating && Date.now() - generateTime > 8000) return;
+
+                candies.push({
+                    x: Math.random() * window.innerWidth,
+                    y: -30,
+                    size: Math.random() * 20 + 16,
+                    speed: Math.random() * 4 + 2,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.1,
+                    swing: Math.random() * 2 + 1,
+                    swingSpeed: Math.random() * 0.02 + 0.01,
+                    type: candyTypes[Math.floor(Math.random() * candyTypes.length)]
+                });
+            }
+
+            // 初始生成一批
+            for (let i = 0; i < 60; i++) {
+                createCandy();
+                candies[i].y = Math.random() * window.innerHeight;
+            }
+
+            // 持续生成
+            const generateInterval = setInterval(() => {
+                if (Date.now() - generateTime > 8000) {
+                    stopGenerating = true;
+                    clearInterval(generateInterval);
+                }
+                createCandy();
+            }, 100);
+
+            function animate() {
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+                candies.forEach((candy, index) => {
+                    candy.y += candy.speed;
+                    candy.rotation += candy.rotationSpeed;
+                    candy.x += Math.sin(candy.y * candy.swingSpeed) * candy.swing;
+
+                    ctx.save();
+                    ctx.translate(candy.x, candy.y);
+                    ctx.rotate(candy.rotation);
+                    ctx.font = candy.size + 'px serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(candy.type, 0, 0);
+                    ctx.restore();
+
+                    // 移除落出屏幕的
+                    if (candy.y > window.innerHeight + 50) {
+                        candies.splice(index, 1);
+                    }
+                });
+
+                // 全部落完后停止动画
+                if (stopGenerating && candies.length === 0) {
+                    cancelAnimationFrame(candyAnimationId);
+                    candyAnimationId = null;
+                    return;
+                }
+
+                candyAnimationId = requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        // ==================== 音频 ====================
+        function playBGM() {
+            if (isMuted) return;
+            try {
+                bgmAudio = new Audio(CONFIG.audio.bgm);
+                bgmAudio.loop = true;
+                bgmAudio.volume = 0.3;
+                bgmAudio.play().catch(() => {});
+            } catch (e) {
+                // 音频文件不存在时静默处理
+            }
+        }
+
+        function playSound(type) {
+            if (isMuted) return;
+            try {
+                const audio = new Audio(CONFIG.audio[type]);
+                audio.volume = 0.5;
+                audio.play().catch(() => {});
+            } catch (e) {
+                // 静默处理
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            muteBtn.textContent = isMuted ? '🔇' : '🔊';
+            if (bgmAudio) {
+                bgmAudio.muted = isMuted;
+            }
+        }
+
+        // ==================== 重置游戏 ====================
+        function resetGame() {
+            collectedCount = 0;
+            isDialogOpen = false;
+            gameStarted = false;
+
+            // 重置物件
+            document.querySelectorAll('.item').forEach(item => {
+                item.classList.remove('collected', 'collecting');
+            });
+
+            // 重置进度
+            updateProgress();
+            hintText.textContent = '点点看，屋里藏着 5 件东西……';
+
+            // 重置门
+            finalDoor.classList.add('locked');
+            finalDoor.classList.remove('unlocked');
+
+            // 隐藏结局
+            endingScreen.classList.remove('show');
+            endingText.textContent = '';
+
+            // 停止糖果雨
+            if (candyAnimationId) {
+                cancelAnimationFrame(candyAnimationId);
+                candyAnimationId = null;
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            }
+
+            // 回到开场
+            startScreen.style.display = 'flex';
+            startScreen.style.opacity = '1';
+            gameScene.style.opacity = '0';
+            document.getElementById('progressBar').style.opacity = '0';
+            hintText.style.opacity = '0';
+            muteBtn.style.opacity = '0';
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>
