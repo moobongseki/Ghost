@@ -806,11 +806,11 @@
         }
 
         function resizeCanvas() {
-            candyCanvas.width = window.innerWidth * (window.devicePixelRatio || 1);
-            candyCanvas.height = window.innerHeight * (window.devicePixelRatio || 1);
+            // 不使用devicePixelRatio缩放，降低渲染压力
+            candyCanvas.width = window.innerWidth;
+            candyCanvas.height = window.innerHeight;
             candyCanvas.style.width = window.innerWidth + 'px';
             candyCanvas.style.height = window.innerHeight + 'px';
-            ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
         }
 
         function bindEvents() {
@@ -1003,25 +1003,27 @@
             candies = [];
             stopGenerating = false;
             generateTime = Date.now();
+            const maxCandies = 40; // 减少最大粒子数
 
             function createCandy() {
+                if (candies.length >= maxCandies) return;
                 if (stopGenerating && Date.now() - generateTime > 8000) return;
 
                 candies.push({
                     x: Math.random() * window.innerWidth,
                     y: -30,
-                    size: Math.random() * 20 + 16,
-                    speed: Math.random() * 4 + 2,
+                    size: Math.random() * 16 + 14, // 减小尺寸
+                    speed: Math.random() * 3 + 2,
                     rotation: Math.random() * Math.PI * 2,
-                    rotationSpeed: (Math.random() - 0.5) * 0.1,
-                    swing: Math.random() * 2 + 1,
-                    swingSpeed: Math.random() * 0.02 + 0.01,
+                    rotationSpeed: (Math.random() - 0.5) * 0.05, // 减慢旋转
+                    swing: Math.random() * 1.5 + 0.5,
+                    swingSpeed: Math.random() * 0.01 + 0.005,
                     type: candyTypes[Math.floor(Math.random() * candyTypes.length)]
                 });
             }
 
             // 初始生成一批
-            for (let i = 0; i < 60; i++) {
+            for (let i = 0; i < 30; i++) {
                 createCandy();
                 candies[i].y = Math.random() * window.innerHeight;
             }
@@ -1033,12 +1035,17 @@
                     clearInterval(generateInterval);
                 }
                 createCandy();
-            }, 100);
+            }, 200); // 放慢生成速度
 
             function animate() {
                 ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-                candies.forEach((candy, index) => {
+                // 预设置字体，避免每帧重复设置
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                for (let i = candies.length - 1; i >= 0; i--) {
+                    const candy = candies[i];
                     candy.y += candy.speed;
                     candy.rotation += candy.rotationSpeed;
                     candy.x += Math.sin(candy.y * candy.swingSpeed) * candy.swing;
@@ -1047,16 +1054,14 @@
                     ctx.translate(candy.x, candy.y);
                     ctx.rotate(candy.rotation);
                     ctx.font = candy.size + 'px serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
                     ctx.fillText(candy.type, 0, 0);
                     ctx.restore();
 
                     // 移除落出屏幕的
                     if (candy.y > window.innerHeight + 50) {
-                        candies.splice(index, 1);
+                        candies.splice(i, 1);
                     }
-                });
+                }
 
                 // 全部落完后停止动画
                 if (stopGenerating && candies.length === 0) {
